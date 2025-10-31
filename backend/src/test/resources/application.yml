@@ -1,0 +1,25 @@
+# 테스트 환경에서는 H2 인메모리 데이터베이스를 사용합니다.
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL # H2를 PostgreSQL 모드로 실행하여 호환성 확보
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      # 테스트 실행 시 스키마를 생성하고, 끝나면 삭제합니다.
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # H2를 PostgreSQL 처럼 사용하기 위한 Dialect 설정
+        dialect: org.hibernate.dialect.H2Dialect
+        # DDL 포맷팅
+        format_sql: true
+    # 콘솔에 JPA가 실행하는 SQL 쿼리를 보여줍니다. (디버깅에 유용)
+    show-sql: true
+
+logging:
+  level:
+    # SQL 쿼리의 파라미터 바인딩을 로그로 확인합니다.
+    org.hibernate.type.descriptor.sql: trace

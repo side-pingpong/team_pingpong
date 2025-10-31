@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' // 버전은 루트에서 관리하므로 생략
+    id 'io.spring.dependency-management' // 버전은 루트에서 관리하므로 생략
+}
+
+ext {
+    set('springAiVersion', "1.0.3")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2' // 테스트용 인메모리 DB
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

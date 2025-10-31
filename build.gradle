@@ -1,54 +1,39 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.5.7'
-    id 'io.spring.dependency-management' version '1.1.7'
+    // 하위 모듈에서 버전을 명시하지 않아도 되도록 중앙에서 버전만 관리합니다.
+    id 'org.springframework.boot' version '3.5.7' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'com.team_pingpong'
-version = '0.0.1-SNAPSHOT'
-description = 'team_pingpong'
+// 모든 프로젝트(루트 포함)에 적용될 설정
+allprojects {
+    group = 'com.team_pingpong'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    repositories {
+        mavenCentral()
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
+// 모든 하위 프로젝트들을 대상으로...
+subprojects {
+    // 만약 그 프로젝트가 'java' 플러그인을 가지고 있다면, 아래 설정을 적용한다.
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+            }
+        }
+
+        // 롬복(Lombok)처럼 모든 자바 프로젝트에 공통으로 들어갈 의존성
+        dependencies {
+            compileOnly 'org.projectlombok:lombok'
+            annotationProcessor 'org.projectlombok:lombok'
+        }
+
+        configurations {
+            compileOnly {
+                extendsFrom annotationProcessor
+            }
+        }
     }
-}
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springAiVersion', "1.0.3")
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-    }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }
