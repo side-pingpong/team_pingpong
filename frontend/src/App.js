@@ -3,12 +3,14 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ChatRoom from './chatroom';
 import Home from './Home';
+import ChatListScreen from "./chatList/chatListScreen";
 
 function App() {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/chatroom" element={<ChatRoom />} />
+            <Route path="/chatListScreen" element={<ChatListScreen />} />
         </Routes>
     );
 }
