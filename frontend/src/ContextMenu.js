@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MessageSquare, Settings, Star, Bell, LogOut, Edit3 } from 'lucide-react';
+import { MessageSquare, Star, Bell, LogOut, Edit3 } from 'lucide-react';
 
 const ContextMenu = React.memo(({ x, y, chatId, onAction, onClose, isFavorite }) => {
     const menuRef = useRef(null);
