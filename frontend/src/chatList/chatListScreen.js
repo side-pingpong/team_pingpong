@@ -113,14 +113,6 @@ export default function ChatListApp() {
                     setChats(chats.filter(c => c.id !== chatId));
                 }
                 break;
-            case 'toggle_alert':
-                setChats(chats.map(c =>
-                    c.id === chatId
-                        ? {...c, isAlertOn: !c.isAlertOn} // 상태 토글
-                        : c
-                ));
-                alert(`${chat.name} 알림을 ${chat.isAlertOn ? '껐습니다' : '켰습니다'}.`);
-                break;
             default:
                 break;
         }
