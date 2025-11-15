@@ -1,5 +1,6 @@
 // frontend/src/pages/Register/RegisterPage.js
 import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import AuthForm from '../../components/auth/AuthForm';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -7,6 +8,7 @@ import Logo from '../../components/common/Logo';
 import {register} from '../../api/auth';
 
 function RegisterPage() {
+    const navigate = useNavigate();
     const [form, setForm] = useState({
         id: '',
         verificationCode: '',
@@ -79,7 +81,7 @@ function RegisterPage() {
             const response = await register(userData);
             console.log('회원가입 성공:', response);
             alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
-            window.location.href = '/login';
+            navigate('/login');
         } catch (error) {
             console.error('회원가입 실패:', error);
         }

@@ -4,7 +4,7 @@ import AuthForm from '../../components/auth/AuthForm';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
-import {findId} from '../../api/auth'; // Import the API function
+import {findId} from '../../api/auth';
 
 function FindIdPage() {
     const [form, setForm] = useState({name: '', phone: ''});
@@ -15,7 +15,7 @@ function FindIdPage() {
         setForm({...form, [name]: value});
     };
 
-    const handleFindId = async () => { // Make it async
+    const handleFindId = async () => {
         console.log('ID 찾기 시도:', form);
         if (!form.name || !form.phone) {
             alert('이름과 핸드폰 번호를 모두 입력해주세요.');
@@ -29,7 +29,7 @@ function FindIdPage() {
                 setFoundId(maskedId);
             } else {
                 alert(response.message);
-                setFoundId(''); // Clear previous result on failure
+                setFoundId('');
             }
         } catch (error) {
             console.error('ID 찾기 실패:', error);
