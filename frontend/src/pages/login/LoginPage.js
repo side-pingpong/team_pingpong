@@ -3,10 +3,10 @@ import React, {useState} from 'react';
 import AuthForm from '../../components/auth/AuthForm';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import Logo from '../../components/common/Logo';
 import {login} from '../../api/auth';
 import naverLogo from '../../assets/images/naver_login.png';
 import kakaoLogo from '../../assets/images/kakao_login.png';
-import Logo from "../../components/common/Logo";
 
 function LoginPage() {
     const [form, setForm] = useState({id: '', password: ''});
@@ -36,8 +36,8 @@ function LoginPage() {
     const loginButtonBaseStyle = "w-full h-12 flex items-center justify-center px-4 rounded-md shadow-sm text-sm font-medium transition-colors";
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="w-full max-w-sm">
+        <div className="min-h-screen bg-gray-50">
+            <div className="w-full max-w-sm mx-auto pt-5">
                 <Logo/>
                 <AuthForm>
                     <div className="flex flex-col space-y-4">
