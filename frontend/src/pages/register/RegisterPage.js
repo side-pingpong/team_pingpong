@@ -7,7 +7,7 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {register} from '../../api/auth';
 
-function RegisterPage() {
+export default function RegisterPage() {
     const navigate = useNavigate();
     const [form, setForm] = useState({
         id: '',
@@ -188,5 +188,3 @@ function RegisterPage() {
         </div>
     );
 }
-
-export default RegisterPage;

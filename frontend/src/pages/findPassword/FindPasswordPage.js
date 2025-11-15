@@ -7,7 +7,7 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {findPassword} from '../../api/auth';
 
-function FindPasswordPage() {
+export default function FindPasswordPage() {
     const navigate = useNavigate();
     const [form, setForm] = useState({name: '', email: '', verificationCode: ''});
     const [isVerificationSent, setIsVerificationSent] = useState(false);
@@ -108,5 +108,3 @@ function FindPasswordPage() {
         </div>
     );
 }
-
-export default FindPasswordPage;
