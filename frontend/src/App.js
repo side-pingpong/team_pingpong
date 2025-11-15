@@ -7,6 +7,7 @@ import ChatListScreen from "./chatList/chatListScreen";
 import LoginPage from './pages/login/LoginPage';
 import RegisterPage from "./pages/register/RegisterPage";
 import FindIdPage from "./pages/findId/FindIdPage";
+import FindPasswordPage from "./pages/findPassword/FindPasswordPage";
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/login" element={<LoginPage/>}/>
             <Route path="/register" element={<RegisterPage/>}/>
             <Route path="/findId" element={<FindIdPage/>}/>
+            <Route path="/findPassword" element={<FindPasswordPage/>}/>
         </Routes>
     );
 }
