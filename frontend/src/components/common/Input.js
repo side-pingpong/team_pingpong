@@ -1,10 +1,8 @@
 // frontend/src/components/common/Input.js
 import React from 'react';
 
-function Input({ ...props }) {
+export default function Input({...props}) {
     return (
         <input {...props} />
     );
 }
-
-export default Input;

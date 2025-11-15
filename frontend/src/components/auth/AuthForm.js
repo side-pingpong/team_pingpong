@@ -1,7 +1,7 @@
 // frontend/src/components/auth/AuthForm.js
 import React from 'react';
 
-function AuthForm({ title, buttonText, onSubmit, children }) {
+export default function AuthForm({buttonText, onSubmit, children}) {
     const handleSubmit = (event) => {
         event.preventDefault();
         onSubmit();
@@ -16,5 +16,3 @@ function AuthForm({ title, buttonText, onSubmit, children }) {
         </div>
     );
 }
-
-export default AuthForm;

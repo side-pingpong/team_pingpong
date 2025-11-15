@@ -1,14 +1,14 @@
 // frontend/src/pages/Login/index.js
 import React, {useState} from 'react';
-import AuthForm from '../../components/auth/AuthForm';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import Logo from '../../components/common/Logo';
 import {login} from '../../api/auth';
-import naverLogo from '../../assets/images/naver_login.png';
 import kakaoLogo from '../../assets/images/kakao_login.png';
+import naverLogo from '../../assets/images/naver_login.png';
+import AuthForm from '../../components/auth/AuthForm';
+import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
+import Logo from '../../components/common/Logo';
 
-export default function LoginPage() {
+export default function Login() {
     const [form, setForm] = useState({id: '', password: ''});
 
     const handleChange = (e) => {
