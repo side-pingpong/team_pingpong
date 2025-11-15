@@ -6,7 +6,7 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {findId} from '../../api/auth';
 
-function FindIdPage() {
+export default function FindIdPage() {
     const [form, setForm] = useState({name: '', phone: ''});
     const [foundId, setFoundId] = useState('');
 
@@ -87,5 +87,3 @@ function FindIdPage() {
         </div>
     );
 }
-
-export default FindIdPage;

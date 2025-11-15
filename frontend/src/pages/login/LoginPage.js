@@ -8,7 +8,7 @@ import {login} from '../../api/auth';
 import naverLogo from '../../assets/images/naver_login.png';
 import kakaoLogo from '../../assets/images/kakao_login.png';
 
-function LoginPage() {
+export default function LoginPage() {
     const [form, setForm] = useState({id: '', password: ''});
 
     const handleChange = (e) => {
@@ -121,5 +121,3 @@ function LoginPage() {
         </div>
     );
 }
-
-export default LoginPage;

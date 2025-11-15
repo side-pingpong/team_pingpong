@@ -7,9 +7,9 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {resetPassword} from "../../api/auth";
 
-function ResetPasswordPage() {
+export default function ResetPasswordPage() {
     const navigate = useNavigate();
-    const [userInfo, setUserInfo] = useState({name: '홍길동', id: 'user123'});
+    const [userInfo] = useState({name: '홍길동', id: 'user123'});
     const [passwords, setPasswords] = useState({newPassword: '', confirmPassword: ''});
 
     const handleChange = (e) => {
@@ -106,5 +106,3 @@ function ResetPasswordPage() {
         </div>
     );
 }
-
-export default ResetPasswordPage;
