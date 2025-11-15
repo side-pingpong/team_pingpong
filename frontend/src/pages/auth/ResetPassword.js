@@ -1,4 +1,4 @@
-// frontend/src/pages/ResetPassword/ResetPasswordPage.js
+// frontend/src/pages/ResetPassword/ResetPassword.js
 import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import AuthForm from '../../components/auth/AuthForm';
@@ -7,7 +7,7 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {resetPassword} from "../../api/auth";
 
-export default function ResetPasswordPage() {
+export default function ResetPassword() {
     const navigate = useNavigate();
     const [userInfo] = useState({name: '홍길동', id: 'user123'});
     const [passwords, setPasswords] = useState({newPassword: '', confirmPassword: ''});
