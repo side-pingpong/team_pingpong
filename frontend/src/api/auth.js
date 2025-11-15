@@ -12,6 +12,17 @@ export const register = async (userData) => {
     return {success: true, message: 'Register successful'};
 };
 
+export const findId = async (name, phone) => {
+    console.log('Find ID API call for:', {name, phone});
+    // 실제 API 호출 로직
+    // 예시: 이름과 핸드폰 번호로 ID를 찾는 로직
+    if (name === '홍길동' && phone === '010-1234-5678') {
+        return {success: true, foundId: 'user123'};
+    } else {
+        return {success: false, message: '일치하는 사용자를 찾을 수 없습니다.'};
+    }
+};
+
 export const findPassword = async (email) => {
     console.log('Find Password API call for:', email);
     // 실제 API 호출 로직
