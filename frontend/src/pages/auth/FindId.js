@@ -1,4 +1,4 @@
-// frontend/src/pages/FindId/FindIdPage.js
+// frontend/src/pages/FindId/FindId.js
 import React, {useState} from 'react';
 import AuthForm from '../../components/auth/AuthForm';
 import Input from '../../components/common/Input';
@@ -6,7 +6,7 @@ import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 import {findId} from '../../api/auth';
 
-export default function FindIdPage() {
+export default function FindId() {
     const [form, setForm] = useState({name: '', phone: ''});
     const [foundId, setFoundId] = useState('');
 
