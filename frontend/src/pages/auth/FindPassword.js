@@ -1,13 +1,13 @@
-// frontend/src/pages/FindPassword/FindPasswordPage.js
+// frontend/src/pages/FindPassword/FindPassword.js
 import React, {useState} from 'react';
+import {findPassword} from '../../api/auth';
 import {useNavigate} from "react-router-dom";
 import AuthForm from '../../components/auth/AuthForm';
-import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 import Logo from '../../components/common/Logo';
-import {findPassword} from '../../api/auth';
 
-export default function FindPasswordPage() {
+export default function FindPassword() {
     const navigate = useNavigate();
     const [form, setForm] = useState({name: '', email: '', verificationCode: ''});
     const [isVerificationSent, setIsVerificationSent] = useState(false);

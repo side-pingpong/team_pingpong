@@ -1,13 +1,13 @@
-// frontend/src/pages/Register/RegisterPage.js
+// frontend/src/pages/Register/Register.js
 import React, {useState} from 'react';
+import {register} from '../../api/auth';
 import {useNavigate} from 'react-router-dom';
 import AuthForm from '../../components/auth/AuthForm';
-import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 import Logo from '../../components/common/Logo';
-import {register} from '../../api/auth';
 
-export default function RegisterPage() {
+export default function Register() {
     const navigate = useNavigate();
     const [form, setForm] = useState({
         id: '',
