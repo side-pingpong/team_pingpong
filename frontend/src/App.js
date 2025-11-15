@@ -4,11 +4,11 @@ import {Route, Routes} from 'react-router-dom';
 import ChatRoom from './chatroom';
 import Home from './Home';
 import ChatListScreen from "./chatList/chatListScreen";
-import Login from './pages/auth/Login';
-import Register from "./pages/auth/Register";
-import FindId from "./pages/auth/FindId";
-import FindPassword from "./pages/auth/FindPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
+import LoginPage from './pages/login/LoginPage';
+import RegisterPage from "./pages/register/RegisterPage";
+import FindIdPage from "./pages/findId/FindIdPage";
+import FindPasswordPage from "./pages/findPassword/FindPasswordPage";
+import ResetPasswordPage from "./pages/resetPassword/ResetPasswordPage";
 
 export default function App() {
     return (
@@ -16,11 +16,11 @@ export default function App() {
             <Route path="/" element={<Home/>}/>
             <Route path="/chatroom" element={<ChatRoom/>}/>
             <Route path="/chatListScreen" element={<ChatListScreen/>}/>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/findId" element={<FindId/>}/>
-            <Route path="/findPassword" element={<FindPassword/>}/>
-            <Route path="/resetPassword" element={<ResetPassword/>}/>
+            <Route path="/login" element={<LoginPage/>}/>
+            <Route path="/register" element={<RegisterPage/>}/>
+            <Route path="/findId" element={<FindIdPage/>}/>
+            <Route path="/findPassword" element={<FindPasswordPage/>}/>
+            <Route path="/resetPassword" element={<ResetPasswordPage/>}/>
         </Routes>
     );
 }
