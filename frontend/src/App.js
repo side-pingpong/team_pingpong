@@ -5,6 +5,7 @@ import ChatRoom from './chatroom';
 import Home from './Home';
 import ChatListScreen from "./chatList/chatListScreen";
 import LoginPage from './pages/login/LoginPage';
+import RegisterPage from "./pages/register/RegisterPage";
 
 function App() {
     return (
@@ -13,6 +14,7 @@ function App() {
             <Route path="/chatroom" element={<ChatRoom/>}/>
             <Route path="/chatListScreen" element={<ChatListScreen/>}/>
             <Route path="/login" element={<LoginPage/>}/>
+            <Route path="/register" element={<RegisterPage/>}/>
         </Routes>
     );
 }
