@@ -2,7 +2,7 @@ import React from 'react';
 import { FlagIcon, Star, BellOff } from 'lucide-react';
 
 const ChatListItem = React.memo(({ chat, onContextMenu }) => {
-    const { id, name, lastMessage, lastTime, isTeam, isFavorite, unreadCount, profileEmoji, isAlertOn } = chat;
+    const { id, name, lastMessage, lastTime, isTeam, isFavorite, unreadCount, profileImage, isAlertOn } = chat;
 
     return (
         <div
@@ -13,7 +13,7 @@ const ChatListItem = React.memo(({ chat, onContextMenu }) => {
             {/* 프로필 사진 영역 (이모지로 대체) */}
             <div className="mr-4">
                 <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-xl">
-                    {profileEmoji}
+                    {profileImage}
                 </div>
             </div>
 

@@ -1,17 +1,18 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Search, ChevronDown, MessageSquare, Settings, User, Folder, X } from 'lucide-react';
+import { Search, ChevronDown, X } from 'lucide-react';
 
 import ChatListItem from './ChatListItem';
 import NewChatModal from './NewChatModal';
 import ContextMenu from '../../components/ContextMenu';
+import Sidebar from "../../components/Sidebar";
 
 const initialMockChats = [
-    { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '11:30', isTeam: true, isFavorite: true, unreadCount: 3, profileEmoji: '💼', isAlertOn: true },
-    { id: 2, name: '민영', lastMessage: '점심 뭐 드실 거예요?', lastTime: '어제', isTeam: false, isFavorite: false, unreadCount: 0, profileEmoji: '👩‍💻', isAlertOn: false },
-    { id: 3, name: '영경, 성훈', lastMessage: '확인했습니다!', lastTime: '11/01', isTeam: false, isFavorite: true, unreadCount: 1, profileEmoji: '🤝', isAlertOn: true },
+    { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '11:30', isTeam: true, isFavorite: true, unreadCount: 3, profileImage: '💼', isAlertOn: true },
+    { id: 2, name: '민영', lastMessage: '점심 뭐 드실 거예요?', lastTime: '어제', isTeam: false, isFavorite: false, unreadCount: 0, profileImage: '👩‍💻', isAlertOn: false },
+    { id: 3, name: '영경, 성훈', lastMessage: '확인했습니다!', lastTime: '11/01', isTeam: false, isFavorite: true, unreadCount: 1, profileImage: '🤝', isAlertOn: true },
 ];
 
-export default function ChatListApp() {
+export default function ChatListScreen() {
     const [chats, setChats] = useState(initialMockChats); // 채팅 목록 상태
     const [currentSort, setCurrentSort] = useState('latest');
     const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
@@ -41,14 +42,14 @@ export default function ChatListApp() {
 
     const handleAddChat = (newChatData) => {
         const newChat = {
-            id: Date.now(), // ✔️ 채팅 아이디가 왜 Date.now() 야? bigInt로 숫자로 생성되어야지 않아?
+            id: Date.now(),
             name: newChatData.name,
             lastMessage: '새 채팅이 시작되었습니다.',
             lastTime: new Date().toISOString(),
             isTeam: newChatData.isTeam,
             isFavorite: false,
             unreadCount: 0,
-            profileEmoji: newChatData.isTeam ? '👥' : newChatData.profileEmoji || '💬',
+            profileImage: newChatData.isTeam ? '👥' : newChatData.profileImage || '💬',
             isAlertOn: true,
         };
         setChats(prevChats => [newChat, ...prevChats]);
@@ -63,7 +64,7 @@ export default function ChatListApp() {
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
 
-        // 메뉴가 화면 밖으로 나가지 않도록 조정 (옵션) > 이거 필요해?
+        // 메뉴가 화면 밖으로 나가지 않도록 조정
         const menuWidth = 200;
         const menuHeight = 250;
         if (x + menuWidth > rect.width) {
@@ -163,34 +164,14 @@ export default function ChatListApp() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [contextMenu.visible]);
 
-    // 사이드바 버튼 스타일을 위한 공통 클래스
-    const sidebarButtonClass = (key) =>
-        `flex flex-col items-center justify-center w-full h-16 rounded-lg transition-all duration-200 p-2 cursor-pointer ${
-            activeSidebar === key
-                ? 'text-blue-400 bg-gray-700'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
-        }`;
-
-
     return (
-        <div className="flex h-screen w-screen bg-gray-900 mx-auto shadow-2xl">
+        <div className="flex h-screen w-full bg-gray-900 mx-auto shadow-2xl">
 
             {/* 1. 사이드바 */}
-            <div className="w-20 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700">
-                <button onClick={() => setActiveSidebar('friends')} className={sidebarButtonClass('friends')} title="친구 목록">
-                    <User size={24} /><span className="text-xs mt-1">친구 목록</span>
-                </button>
-                <button onClick={() => setActiveSidebar('chat')} className={sidebarButtonClass('chat')} title="채팅 목록">
-                    <MessageSquare size={24} /><span className="text-xs mt-1">채팅 목록</span>
-                </button>
-                <button onClick={() => setActiveSidebar('file')} className={sidebarButtonClass('file')} title="파일함">
-                    <Folder size={24} /><span className="text-xs mt-1">파일함</span>
-                </button>
-                <div className="flex-grow"></div>
-                <button onClick={() => setActiveSidebar('settings')} className={sidebarButtonClass('settings')} title="환경 설정">
-                    <Settings size={24} /><span className="text-xs mt-1">설정</span>
-                </button>
-            </div>
+            <Sidebar
+                activeSidebar={activeSidebar}
+                setActiveSidebar={setActiveSidebar}
+            />
 
             {/* 2. 메인 콘텐츠 (채팅 리스트) */}
             <div className="flex-1 flex flex-col bg-gray-900">
@@ -204,15 +185,20 @@ export default function ChatListApp() {
                             className="flex items-center text-xl font-bold text-white hover:text-gray-300 transition-colors"
                             onClick={() => setIsSortDropdownOpen(prev => !prev)}
                         >
-                            채팅 <ChevronDown size={18} className={`ml-1 transition-transform ${isSortDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
+                            채팅 <ChevronDown size={18}
+                                            className={`ml-1 transition-transform ${isSortDropdownOpen ? 'rotate-180' : 'rotate-0'}`}/>
                         </button>
                         {isSortDropdownOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-10 p-1">
+                            <div
+                                className="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-10 p-1">
                                 {sortOptions.map(option => (
                                     <div
                                         key={option.key}
                                         className={`px-3 py-2 cursor-pointer rounded transition-colors ${currentSort === option.key ? 'bg-blue-600 text-white' : 'hover:bg-gray-600 text-gray-300'}`} // ✔️ 여기 설명해줘
-                                        onClick={() => { setCurrentSort(option.key); setIsSortDropdownOpen(false); }}
+                                        onClick={() => {
+                                            setCurrentSort(option.key);
+                                            setIsSortDropdownOpen(false);
+                                        }}
                                     >
                                         {option.label}
                                     </div>
@@ -227,7 +213,7 @@ export default function ChatListApp() {
                             onClick={() => setIsSearching(true)}
                             title="채팅 검색"
                         >
-                            <Search size={20} />
+                            <Search size={20}/>
                         </button>
                         <button
                             className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-semibold"
@@ -243,7 +229,7 @@ export default function ChatListApp() {
                 {isSearching && (
                     <div className="p-4 bg-gray-800 border-b border-gray-700 flex items-center gap-2">
                         <div className="relative flex-1">
-                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                             <input
                                 type="text"
                                 placeholder="채팅방, 참여자 검색 | 통합 검색"
@@ -253,10 +239,13 @@ export default function ChatListApp() {
                             />
                         </div>
                         <button
-                            onClick={() => { setIsSearching(false); setSearchQuery(''); }}
+                            onClick={() => {
+                                setIsSearching(false);
+                                setSearchQuery('');
+                            }}
                             className="p-2 text-gray-400 hover:text-white transition-colors"
                         >
-                            <X size={20} />
+                            <X size={20}/>
                         </button>
                     </div>
                 )}
@@ -282,7 +271,7 @@ export default function ChatListApp() {
                             y={contextMenu.y}
                             chatId={contextMenu.chatId}
                             onAction={handleMenuAction}
-                            onClose={() => setContextMenu(prev => ({ ...prev, visible: false }))}
+                            onClose={() => setContextMenu(prev => ({...prev, visible: false}))}
                             isFavorite={chats.find(c => c.id === contextMenu.chatId)?.isFavorite || false}
                         />
                     )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Check, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
+import FriendSelectionModal from "../components/chat/FriendSelectionModal";
+import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
 
 export default function ChatRoom() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -14,7 +15,6 @@ export default function ChatRoom() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
-    const [selectedFriends, setSelectedFriends] = useState([]);
     const [isEditingRoomName, setIsEditingRoomName] = useState(false);
     const [roomName, setRoomName] = useState('채팅방 프로필');
     const [roomThumbnail, setRoomThumbnail] = useState('💬');
@@ -32,27 +32,27 @@ export default function ChatRoom() {
     const currentUser = {
         id: 'user1',
         name: '나',
-        avatar: '👤',
+        profileImage: '👤',
         isOwner: true // 방장 여부
     };
 
     // 채팅방 참여자
     const [participants, setParticipants] = useState([
-        { id: 'user2', name: '김철수', avatar: '🧑', isOwner: false },
-        { id: 'user3', name: '이영희', avatar: '👩', isOwner: false },
-        { id: 'user4', name: '박지성', avatar: '🧔', isOwner: false }
+        { id: 'user2', name: '김철수', profileImage: '🧑', isOwner: false },
+        { id: 'user3', name: '이영희', profileImage: '👩', isOwner: false },
+        { id: 'user4', name: '박지성', profileImage: '🧔', isOwner: false }
     ]);
 
     // 친구 목록 (가나다순 정렬)
     const [friendsList] = useState([
-        { id: 'friend1', name: '강민수', avatar: '🧑‍💼' },
-        { id: 'friend2', name: '권지은', avatar: '👩‍💼' },
-        { id: 'friend3', name: '김영수', avatar: '🧑‍🎓' },
-        { id: 'friend4', name: '박서현', avatar: '👩‍🎨' },
-        { id: 'friend5', name: '송민호', avatar: '🧑‍🔬' },
-        { id: 'friend6', name: '이수진', avatar: '👩‍⚕️' },
-        { id: 'friend7', name: '정대현', avatar: '🧑‍🍳' },
-        { id: 'friend8', name: '최유리', avatar: '👩‍🏫' }
+        { id: 'friend1', name: '강민수', profileImage: '🧑‍💼' },
+        { id: 'friend2', name: '권지은', profileImage: '👩‍💼' },
+        { id: 'friend3', name: '김영수', profileImage: '🧑‍🎓' },
+        { id: 'friend4', name: '박서현', profileImage: '👩‍🎨' },
+        { id: 'friend5', name: '송민호', profileImage: '🧑‍🔬' },
+        { id: 'friend6', name: '이수진', profileImage: '👩‍⚕️' },
+        { id: 'friend7', name: '정대현', profileImage: '🧑‍🍳' },
+        { id: 'friend8', name: '최유리', profileImage: '👩‍🏫' }
     ].filter(friend => !participants.find(p => p.id === friend.id)));
 
     // 메시지 데이터
@@ -61,7 +61,7 @@ export default function ChatRoom() {
             id: 1,
             userId: 'user2',
             userName: '김철수',
-            avatar: '🧑',
+            profileImage: '🧑',
             content: '사진찍 메시지 잘 호비시, 댓글 달기 아이로 등.',
             timestamp: new Date('2025-11-04T10:30:00'),
             replies: [],
@@ -72,7 +72,7 @@ export default function ChatRoom() {
             id: 2,
             userId: 'user1',
             userName: '나',
-            avatar: '👤',
+            profileImage: '👤',
             content: '네, 알겠습니다!',
             timestamp: new Date('2025-11-04T10:32:00'),
             replies: [],
@@ -83,7 +83,7 @@ export default function ChatRoom() {
             id: 3,
             userId: 'user3',
             userName: '이영희',
-            avatar: '👩',
+            profileImage: '👩',
             content: '회의는 몇 시에 시작하나요?',
             timestamp: new Date('2025-11-05T09:15:00'),
             replies: [],
@@ -137,7 +137,7 @@ export default function ChatRoom() {
             id: messages.length + 1,
             userId: currentUser.id,
             userName: currentUser.name,
-            avatar: currentUser.avatar,
+            profileImage: currentUser.profileImage,
             content: messageInput,
             timestamp: new Date(),
             replies: [],
@@ -167,7 +167,7 @@ export default function ChatRoom() {
             id: messages.length + 1,
             userId: currentUser.id,
             userName: currentUser.name,
-            avatar: currentUser.avatar,
+            profileImage: currentUser.profileImage,
             content: messageInput,
             timestamp: new Date(),
             replies: [],
@@ -257,24 +257,14 @@ export default function ChatRoom() {
         }
     }, [messages]);
 
-
-    // 친구 선택 토글
-    const toggleFriendSelection = (friendId) => {
-        setSelectedFriends(prev =>
-            prev.includes(friendId)
-                ? prev.filter(id => id !== friendId)
-                : [...prev, friendId]
-        );
-    };
-
     // 친구 초대
-    const handleInviteFriends = () => {
+    const handleInviteFriends = (selectedFriendIds) => {
+        // 변경: selectedFriends 상태 대신 인수로 받은 selectedFriendIds를 사용
         const newParticipants = friendsList
-            .filter(friend => selectedFriends.includes(friend.id))
+            .filter(friend => selectedFriendIds.includes(friend.id))
             .map(friend => ({ ...friend, isOwner: false }));
 
         setParticipants([...participants, ...newParticipants]);
-        setSelectedFriends([]);
         setIsInviteModalOpen(false);
         alert(`${newParticipants.length}명의 친구를 초대했습니다.`);
     };
@@ -552,7 +542,7 @@ export default function ChatRoom() {
                                         {/* 아바타 (연속 메시지가 아닐 때만 표시) */}
                                         {!isCurrentUser && isNewUserMessage && (
                                             <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xl mt-1">
-                                                {message.avatar}
+                                                {message.profileImage}
                                             </div>
                                         )}
                                         {!isCurrentUser && !isNewUserMessage && (
@@ -735,43 +725,14 @@ export default function ChatRoom() {
 
             {/* 멤버 초대 모달 */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-lg p-6 w-96 max-h-[600px] flex flex-col">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-white">멤버 초대하기</h2>
-                            <button onClick={() => setIsInviteModalOpen(false)} className="text-gray-400 hover:text-white">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto mb-4">
-                            <div className="text-sm text-gray-400 mb-2">친구 목록 ({friendsList.length}명)</div>
-                            {friendsList.map(friend => (
-                                <div
-                                    key={friend.id}
-                                    onClick={() => toggleFriendSelection(friend.id)}
-                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer mb-2 transition-colors ${
-                                        selectedFriends.includes(friend.id)
-                                            ? 'bg-blue-600 hover:bg-blue-700'
-                                            : 'bg-gray-700 hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <span className="text-2xl">{friend.avatar}</span>
-                                    <span className="text-white flex-1">{friend.name}</span>
-                                    {selectedFriends.includes(friend.id) && <Check size={20} className="text-white" />}
-                                </div>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={handleInviteFriends}
-                            disabled={selectedFriends.length === 0}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors"
-                        >
-                            {selectedFriends.length}명 초대하기
-                        </button>
-                    </div>
-                </div>
+                <FriendSelectionModal
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    friendsList={friendsList} // 초대 가능한 친구 목록 전달
+                    onConfirm={handleInviteFriends} // 선택된 ID를 처리하는 함수 전달
+                    title="멤버 초대하기"
+                    confirmLabel="초대하기"
+                />
             )}
 
             {/* 채팅방 설정 모달 */}
@@ -856,13 +817,13 @@ export default function ChatRoom() {
                             <h3 className="text-lg font-semibold text-white mb-3">참여자 목록</h3>
                             <div className="space-y-2 max-h-48 overflow-y-auto">
                                 <div className="flex items-center gap-3 p-2 bg-gray-700 rounded-lg">
-                                    <span className="text-2xl">{currentUser.avatar}</span>
+                                    <span className="text-2xl">{currentUser.profileImage}</span>
                                     <span className="text-white flex-1">{currentUser.name}</span>
                                     {currentUser.isOwner && <span className="text-xs bg-yellow-600 px-2 py-1 rounded">방장</span>}
                                 </div>
                                 {participants.map(participant => (
                                     <div key={participant.id} className="flex items-center gap-3 p-2 bg-gray-700 rounded-lg">
-                                        <span className="text-2xl">{participant.avatar}</span>
+                                        <span className="text-2xl">{participant.profileImage}</span>
                                         <span className="text-white flex-1">{participant.name}</span>
                                     </div>
                                 ))}
@@ -886,13 +847,13 @@ export default function ChatRoom() {
                         <div className="flex-1 overflow-y-auto mb-4">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
-                                    <span className="text-2xl">{currentUser.avatar}</span>
+                                    <span className="text-2xl">{currentUser.profileImage}</span>
                                     <span className="text-white flex-1">{currentUser.name}</span>
                                     {currentUser.isOwner && <span className="text-xs bg-yellow-600 px-2 py-1 rounded">방장</span>}
                                 </div>
                                 {participants.map(participant => (
                                     <div key={participant.id} className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
-                                        <span className="text-2xl">{participant.avatar}</span>
+                                        <span className="text-2xl">{participant.profileImage}</span>
                                         <span className="text-white flex-1">{participant.name}</span>
                                     </div>
                                 ))}
