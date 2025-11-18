@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Search, ChevronDown, MessageSquare, Settings, User, Folder, X } from 'lucide-react';
 
-import ChatListItem from './ChatListItem';
-import NewChatModal from './NewChatModal';
-import ContextMenu from '../ContextMenu';
+import ChatListItem from '../../components/chatList/ChatListItem';
+import NewChatModal from '../../components/chatList/NewChatModal';
+import ContextMenu from '../../components/chatList/ContextMenu';
 
 const initialMockChats = [
     { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '11:30', isTeam: true, isFavorite: true, unreadCount: 3, profileEmoji: '💼', isAlertOn: true },
