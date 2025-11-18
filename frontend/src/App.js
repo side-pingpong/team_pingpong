@@ -3,7 +3,7 @@ import React from 'react';
 import {Route, Routes} from 'react-router-dom';
 import ChatRoom from './chatroom';
 import Home from './Home';
-import ChatListScreen from "./chatList/chatListScreen";
+import ChatListScreen from "./pages/chatList/ChatListScreen";
 import Login from './pages/auth/Login';
 import Register from "./pages/auth/Register";
 import FindId from "./pages/auth/FindId";

@@ -3,7 +3,7 @@ import { Search, ChevronDown, MessageSquare, Settings, User, Folder, X } from 'l
 
 import ChatListItem from './ChatListItem';
 import NewChatModal from './NewChatModal';
-import ContextMenu from '../ContextMenu';
+import ContextMenu from '../../components/ContextMenu';
 
 const initialMockChats = [
     { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '11:30', isTeam: true, isFavorite: true, unreadCount: 3, profileEmoji: '💼', isAlertOn: true },
