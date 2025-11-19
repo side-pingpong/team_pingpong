@@ -12,6 +12,7 @@ const mockFriends = [
 
 const NewChatModal = React.memo(({ onClose, onConfirm }) => { // onConfirm props 추가
     const [chatType, setChatType] = useState('general');
+    const [chatName, setChatName] = useState('');
 
     // 선택된 친구 이름 목록을 기반으로 채팅방 이름 자동 생성
     const generateChatName = (selectedFriendIds) => {
