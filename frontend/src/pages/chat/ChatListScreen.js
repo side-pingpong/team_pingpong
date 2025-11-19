@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Search, ChevronDown, X } from 'lucide-react';
 
-import ChatListItem from './ChatListItem';
-import NewChatModal from './NewChatModal';
-import ContextMenu from "../../components/chatList/ContextMenu";
-import ChatListItem from '../../components/chatList/ChatListItem';
-import NewChatModal from '../../components/chatList/NewChatModal';
+import ContextMenu from "../../components/chat/ContextMenu";
+import ChatListItem from '../../components/chat/ChatListItem';
+import NewChatModal from '../../components/chat/NewChatModal';
 import Sidebar from "../../components/Sidebar";
 
 const initialMockChats = [

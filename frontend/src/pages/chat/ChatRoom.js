@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import FriendSelectionModal from "../components/chat/FriendSelectionModal";
+import FriendSelectionModal from "../../components/chat/FriendSelectionModal";
 import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
 
 export default function ChatRoom() {
