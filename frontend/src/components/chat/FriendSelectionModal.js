@@ -9,18 +9,26 @@ export default function FriendSelectionModal({
                                                  title = '멤버 선택', // 모달 제목
                                                  confirmLabel = '확인', // 확인 버튼 레이블
                                                  children, // children prop을 받도록 정의
+                                                 onSelectionChange,
                                              }) {
+
     // 내부적으로 선택된 친구 ID 목록을 관리합니다.
     const [selectedFriends, setSelectedFriends] = useState([]);
 
     if (!isOpen) return null;
 
     const toggleFriendSelection = (friendId) => {
-        setSelectedFriends(prev =>
-            prev.includes(friendId)
+        setSelectedFriends(prev => {
+            const newSelection = prev.includes(friendId)
                 ? prev.filter(id => id !== friendId)
-                : [...prev, friendId]
-        );
+                : [...prev, friendId];
+
+            // 선택 목록이 변경될 때마다 상위 컴포넌트에 알림
+            if (onSelectionChange) {
+                onSelectionChange(newSelection);
+            }
+            return newSelection;
+        });
     };
 
     const handleConfirm = () => {
