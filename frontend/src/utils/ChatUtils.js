@@ -20,3 +20,23 @@ export const handleChatRoomLeave = ({chatName, isOwner, participants, leaveCallb
     leaveCallback();
     alert(`'${chatName}' 채팅방에서 나갔습니다.`);
 };
+
+export const handleDeleteChatRoom = ({chatData,  currentUser, deleteCallback}) => {
+    if (!currentUser || !currentUser.isOwner) {
+        alert('방장만 채팅방을 삭제할 수 있습니다.');
+        return;
+    }
+
+    const confirmMessage = `${chatData.name} 채팅방을 삭제하시겠습니까? 모든 대화 내용이 삭제됩니다.`;
+    if (window.confirm(confirmMessage)) {
+        // 실제로는 삭제 로직 api 호출코드 들어가야 함
+        console.log(`${chatData.name}채팅방 (ID: {chatData.id}) 삭제 API 호출`);
+
+        // API 호출 성공 후, 콜백 함수 실행
+        alert('채팅방이 삭제됐습니다.');
+
+        if (deleteCallback) {
+            deleteCallback(chatData.id);
+        }
+    }
+}

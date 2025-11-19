@@ -5,11 +5,12 @@ import ContextMenu from "../../components/chat/ContextMenu";
 import ChatListItem from '../../components/chat/ChatListItem';
 import NewChatModal from '../../components/chat/NewChatModal';
 import Sidebar from "../../components/Sidebar";
+import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/ChatUtils";
 
 const initialMockChats = [
-    { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '11:30', isTeam: true, isFavorite: true, unreadCount: 3, profileImage: '💼', isAlertOn: true },
-    { id: 2, name: '민영', lastMessage: '점심 뭐 드실 거예요?', lastTime: '어제', isTeam: false, isFavorite: false, unreadCount: 0, profileImage: '👩‍💻', isAlertOn: false },
-    { id: 3, name: '영경, 성훈', lastMessage: '확인했습니다!', lastTime: '11/01', isTeam: false, isFavorite: true, unreadCount: 1, profileImage: '🤝', isAlertOn: true },
+    { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '2025-11-19T11:30:00Z', isTeam: true, isFavorite: true, unreadCount: 3, profileImage: '💼', isAlertOn: true },
+    { id: 2, name: '민영', lastMessage: '점심 뭐 드실 거예요?', lastTime: '2025-11-18', isTeam: false, isFavorite: false, unreadCount: 0, profileImage: '👩‍💻', isAlertOn: false },
+    { id: 3, name: '영경, 성훈', lastMessage: '확인했습니다!', lastTime: '2025-11-01', isTeam: false, isFavorite: true, unreadCount: 1, profileImage: '🤝', isAlertOn: true },
 ];
 
 export default function ChatListScreen() {
@@ -87,6 +88,11 @@ export default function ChatListScreen() {
         const chat = chats.find(c => c.id === chatId);
         if (!chat) return;
 
+        // 실제로는 전역 상태/prop에서 가져와야함
+        const isOwner = chat.id === 1; // 임시 방장 로직
+        const participants = [{ id: 'user1', name: '나', isOwner: isOwner }, { id: 'user2', name: '팀원1' }];
+        const currentUser = participants[0];
+
         switch (action) {
             case 'open':
                 alert(`${chat.name} 채팅방 열기`);
@@ -110,9 +116,24 @@ export default function ChatListScreen() {
                 alert(`${chat.name} 알림을 ${chat.isAlertOn ? '껐습니다' : '켰습니다'}.`);
                 break;
             case 'leave':
-                if (window.confirm(`정말 ${chat.name} 채팅방을 나가시겠습니까?`)) {
-                    setChats(chats.filter(c => c.id !== chatId));
-                }
+
+                handleChatRoomLeave({
+                    chatName: chat.name,
+                    isOwner: isOwner,
+                    participants: participants,
+                    leaveCallback: () => setChats(chats.filter(c => c.id !== chatId)), // 채팅방 목록에서 제거
+                    currentUser: currentUser,
+                })
+                break;
+            case 'delete':
+                handleDeleteChatRoom({
+                    chatData: { id: chat.id, name: chat.name },
+                    currentUser: currentUser,
+                    deleteCallback: (deletedId) => {
+                        // 삭제된 채팅방을 리스트에서 제거
+                        setChats(prevChats => prevChats.filter(c => c.id !== deletedId));
+                    }
+                });
                 break;
             default:
                 break;

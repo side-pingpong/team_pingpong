@@ -1,8 +1,12 @@
 import React from 'react';
 import { FlagIcon, Star, BellOff } from 'lucide-react';
+import {formatChatTime} from "../../utils/TimeUtils";
 
 const ChatListItem = React.memo(({ chat, onContextMenu }) => {
     const { id, name, lastMessage, lastTime, isTeam, isFavorite, unreadCount, profileImage, isAlertOn } = chat;
+
+    // lastTime Prop을 formatChatTime 유틸리티 함수로 변환
+    const displayTime = formatChatTime(lastTime);
 
     return (
         <div
@@ -34,7 +38,7 @@ const ChatListItem = React.memo(({ chat, onContextMenu }) => {
 
             {/* 시간 및 알림/읽지 않은 메시지 영역 */}
             <div className="ml-2 text-right">
-                <div className="text-xs text-gray-500 mb-1">{lastTime}</div>
+                <div className="text-xs text-gray-500 mb-1">{displayTime}</div>
                 {/* 읽지 않은 메시지 수 표시 */}
                 {unreadCount > 0 && (
                     <div className="inline-block bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">

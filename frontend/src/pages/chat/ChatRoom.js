@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FriendSelectionModal from "../../components/chat/FriendSelectionModal";
+import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/ChatUtils";
+import {isSameDay, formatDate} from "../../utils/TimeUtils";
 import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
 
 export default function ChatRoom() {
@@ -27,6 +29,13 @@ export default function ChatRoom() {
 
     // 추가: 메시지 스크롤을 위한 Ref
     const messagesEndRef = useRef(null);
+
+    // 추가 : 현재 채팅방 정보
+    const currentChatData = {
+        id: 101,
+        name: '프로젝트 팀방',
+        // 실제로는 이 정보도 상위 컴포넌트(ChatListApp)로부터 props로 받아와야함
+    };
 
     // 현재 사용자
     const currentUser = {
@@ -91,23 +100,6 @@ export default function ChatRoom() {
             files: []
         }
     ]);
-
-    // 날짜 포맷팅 함수
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        const dayOfWeek = days[date.getDay()];
-        return `${year}년 ${month}월 ${day}일 ${dayOfWeek}`;
-    };
-
-    // 날짜가 같은지 체크
-    const isSameDay = (date1, date2) => {
-        return date1.getFullYear() === date2.getFullYear() &&
-            date1.getMonth() === date2.getMonth() &&
-            date1.getDate() === date2.getDate();
-    };
 
     // 메시지 필터링
     const filteredMessages = messages.filter(msg => {
@@ -271,31 +263,34 @@ export default function ChatRoom() {
 
     // 채팅방 나가기
     const handleLeaveChatRoom = () => {
-        if (currentUser.isOwner) {
-            // 방장이 나가는 경우
-            const sortedParticipants = [...participants].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-            if (sortedParticipants.length > 0) {
-                alert(`${sortedParticipants[0].name}님이 새로운 방장이 되었습니다.`);
-            }
-        }
-        // [수정] confirm 대신 window.confirm 사용
-        if (window.confirm('채팅방을 나가시겠습니까?')) {
-            alert('채팅방에서 나갔습니다.');
-            // 실제로는 페이지 이동 처리
-        }
+        const chatName = roomName; // 채팅방 이름상태
+        const isOwner = currentUser.isOwner;
+
+        handleChatRoomLeave({
+            chatName: chatName,
+            isOwner: isOwner,
+            participants: participants,
+            leaveCallback: () => {
+                // 실제 페이지 이동 로직: window.location.href = '/chatlist';
+            },
+            currentUser: currentUser,
+        });
     };
 
     // 채팅방 삭제 (방장만)
-    const handleDeleteChatRoom = () => {
-        if (!currentUser.isOwner) {
-            alert('방장만 채팅방을 삭제할 수 있습니다.');
-            return;
-        }
-        // [수정] confirm 대신 window.confirm 사용
-        if (window.confirm('채팅방을 삭제하시겠습니까? 모든 대화 내용이 사라집니다.')) {
-            alert('채팅방이 삭제되었습니다.');
-            // 실제로는 API 호출 및 페이지 이동
-        }
+    const handleDelete = () => {
+        handleDeleteChatRoom({
+            // 유틸리티 함수가 요구하는 형식에 맞게 데이터를 전달합니다.
+            chatData: {
+                id: currentChatData.id,
+                name: currentChatData.name
+            },
+            currentUser: currentUser,
+            deleteCallback: () => {
+                console.log('채팅방 목록 페이지로 이동해야 함');
+                // navigate('/chatlist'); 실행
+            }
+        });
     };
 
     // 채팅방 이미지 업로드
@@ -500,7 +495,7 @@ export default function ChatRoom() {
                         </button>
                         {currentUser.isOwner && (
                             <button
-                                onClick={handleDeleteChatRoom}
+                                onClick={handleDelete}
                                 className="w-full text-left px-4 py-3 hover:bg-red-700 rounded-b-lg transition-colors flex items-center gap-3 text-red-400"
                             >
                                 <Trash2 size={20} />
