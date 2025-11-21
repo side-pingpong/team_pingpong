@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlagIcon, Star, BellOff } from 'lucide-react';
-import {formatChatTime} from "../../utils/TimeUtils";
+import {formatChatTime} from "../../utils/timeUtils";
 
 const ChatListItem = React.memo(({ chat, onContextMenu }) => {
     const { id, name, lastMessage, lastTime, isTeam, isFavorite, unreadCount, profileImage, isAlertOn } = chat;
