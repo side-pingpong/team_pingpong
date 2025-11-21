@@ -30,10 +30,6 @@ export default function FileBox() {
         loadAllFiles();
     }, []);
 
-    const handleNavigation = (path) => {
-        navigate(path);
-    };
-
     // [데이터 가공] 파일 목록을 채팅방 ID와 날짜별로 그룹화
     const groupedByChatAndDate = useMemo(() => {
         return allFiles.reduce((acc, file) => {

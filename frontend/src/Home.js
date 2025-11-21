@@ -1,7 +1,6 @@
 // src/Home.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import FileBox from "./pages/FileBox";
 
 export default function Home() {
     return (

@@ -21,7 +21,6 @@ export default function ChatListScreen() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
-    const [activeSidebar, setActiveSidebar] = useState('chat');
     const navigate = useNavigate();
 
     // 우클릭 메뉴 상태

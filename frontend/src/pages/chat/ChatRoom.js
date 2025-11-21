@@ -26,7 +26,6 @@ export default function ChatRoom() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
-    const [uploadProgress, setUploadProgress] = useState(0);
     // 추가 : 파일 관련
     const [chatFiles, setChatFiles] = useState([]); // 현재 채팅방 파일 목록
     const [downloadProgress, setDownloadProgress] = useState({}); // 다운로드 진행 상태 관리
@@ -694,19 +693,19 @@ export default function ChatRoom() {
                     </div>
                 )}
 
-                {/* 업로드 진행률 */}
-                {uploadProgress > 0 && uploadProgress < 100 && (
-                    <div className="mb-3 bg-gray-700 rounded-lg p-3">
-                        <div className="text-xs text-blue-400 mb-2">파일 업로드 중...</div>
-                        <div className="w-full bg-gray-600 rounded-full h-2">
-                            <div
-                                className="bg-blue-500 h-2 rounded-full transition-all"
-                                style={{ width: `${uploadProgress}%` }}
-                            />
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1 text-right">{uploadProgress}%</div>
-                    </div>
-                )}
+                {/*/!* 업로드 진행률 *!/*/}
+                {/*{uploadProgress > 0 && uploadProgress < 100 && (*/}
+                {/*    <div className="mb-3 bg-gray-700 rounded-lg p-3">*/}
+                {/*        <div className="text-xs text-blue-400 mb-2">파일 업로드 중...</div>*/}
+                {/*        <div className="w-full bg-gray-600 rounded-full h-2">*/}
+                {/*            <div*/}
+                {/*                className="bg-blue-500 h-2 rounded-full transition-all"*/}
+                {/*                style={{ width: `${uploadProgress}%` }}*/}
+                {/*            />*/}
+                {/*        </div>*/}
+                {/*        <div className="text-xs text-gray-400 mt-1 text-right">{uploadProgress}%</div>*/}
+                {/*    </div>*/}
+                {/*)}*/}
 
                 <div className="flex items-center gap-2">
                     <input
