@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import FriendSelectionModal from "../../components/chat/FriendSelectionModal";
-import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/ChatUtils";
-import {isSameDay, formatDate} from "../../utils/TimeUtils";
+import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/chatUtils";
+import {isSameDay, formatDate} from "../../utils/timeUtils";
+import {uploadFileApi, fetchFilesApi} from "../../api/file";
+import {handleFileDownload as utilsHandleFileDownload, groupFilesByDate} from "../../utils/fileUtils";
 import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
 
 export default function ChatRoom() {
@@ -25,8 +27,9 @@ export default function ChatRoom() {
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [downloadProgress, setDownloadProgress] = useState({}); // [수정] 사용하지 않지만, 파일 다운로드 로직에서 사용되므로 유지
-
+    // 추가 : 파일 관련
+    const [chatFiles, setChatFiles] = useState([]); // 현재 채팅방 파일 목록
+    const [downloadProgress, setDownloadProgress] = useState({}); // 다운로드 진행 상태 관리
     // 추가: 메시지 스크롤을 위한 Ref
     const messagesEndRef = useRef(null);
 
@@ -192,53 +195,72 @@ export default function ChatRoom() {
         }
     };
 
-    // 파일 업로드 핸들러 (더미 구현)
-    const handleFileUpload = (event) => {
-        const files = Array.from(event.target.files);
-        if (files.length > 0) {
-            setUploadedFiles(files);
-            setUploadProgress(1); // 업로드 시작
-            // 실제 업로드 로직 (API 호출 등)
+    // ----------------------------------------------------
+    // [수정] 파일 다운로드 Wrapper (상태 관리 로직은 여기에 남음)
+    const handleFileDownload = useCallback((fileId, url, fileName) => {
+        setDownloadProgress(prev => ({ ...prev, [fileId]: 1 })); // 다운로드 시작
+
+        // 순수 유틸리티 함수 호출
+        utilsHandleFileDownload(url, fileName);
+
+        // 다운로드 완료 목업 로직 (실제는 API 응답 헤더나 웹소켓으로 처리)
+        setTimeout(() => {
+            setDownloadProgress(prev => ({ ...prev, [fileId]: 100 }));
+            // 완료 후 0.5초 뒤 상태 제거
             setTimeout(() => {
-                setUploadProgress(100);
-                setUploadProgress(0);
-            }, 1500);
+                setDownloadProgress(prev => {
+                    const newState = { ...prev };
+                    delete newState[fileId];
+                    return newState;
+                });
+            }, 500);
+        }, 1500);
+    }, []);
+
+
+    // [수정] 파일 목록 가져오기 로직 (API 호출 및 가공)
+    const loadFiles = useCallback(async () => {
+        try {
+            //  API 호출
+            const files = await fetchFilesApi(currentChatData.id);
+            setChatFiles(files);
+        } catch (error) {
+            alert('파일 목록을 불러오는 데 실패했습니다.');
+            console.error(error);
+        }
+    }, [currentChatData.id]); // currentChatData.id가 변경될 때마다 호출
+
+    useEffect(() => {
+        loadFiles();
+    }, [loadFiles]);
+
+
+    // [수정] 파일 업로드 로직 (API 호출)
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('chatId', currentChatData.id.toString());
+
+        try {
+            // API 호출
+            const newFileInfo = await uploadFileApi(formData);
+
+            // 업로드 성공 후 파일 목록에 추가
+            setChatFiles(prev => [...prev, newFileInfo]);
+            alert(`${file.name} 파일 업로드 완료!`);
+            // 메시지 전송 로직도 여기에 추가될 수 있음
+
+        } catch (error) {
+            alert('파일 업로드 중 오류가 발생했습니다.');
+            console.error(error);
         }
     };
 
-    // 파일 다운로드 핸들러 (더미 구현)
-    const handleFileDownload = (fileId, url, fileName) => {
-        setDownloadProgress(prev => ({ ...prev, [fileId]: 1 }));
-        // 실제 다운로드 로직
-        setTimeout(() => {
-            setDownloadProgress(prev => ({ ...prev, [fileId]: 100 }));
-            setDownloadProgress(prev => {
-                const newState = { ...prev };
-                delete newState[fileId];
-                return newState;
-            });
-        }, 1000);
-    };
-
-    // 모든 파일 가져오기 (더미 구현)
-    const getAllFiles = () => {
-        // 메시지에서 파일 정보를 추출하여 날짜별로 그룹화하는 로직
-        const allFiles = messages.flatMap(msg =>
-            msg.files.map(file => ({
-                ...file,
-                timestamp: msg.timestamp,
-                dateKey: formatDate(msg.timestamp)
-            }))
-        );
-
-        return allFiles.reduce((acc, file) => {
-            if (!acc[file.dateKey]) {
-                acc[file.dateKey] = [];
-            }
-            acc[file.dateKey].push(file);
-            return acc;
-        }, {});
-    };
+    //  [수정] 날짜별 그룹화 로직 (유틸리티 함수 사용)
+    const groupedChatFiles = groupFilesByDate(chatFiles, formatDate);
 
     // ----------------------------------------------------------------
     // [추가] 스크롤 자동 이동
@@ -902,31 +924,34 @@ export default function ChatRoom() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
-                            {Object.keys(getAllFiles()).length === 0 ? (
+                            {/* 🚨 [수정] groupedChatFiles 데이터 사용 */}
+                            {Object.keys(groupedChatFiles).length === 0 ? (
                                 <div className="text-center text-gray-400 py-10">
                                     <Folder size={48} className="mx-auto mb-3 opacity-50" />
                                     <p>공유된 파일이 없습니다</p>
                                 </div>
                             ) : (
-                                Object.entries(getAllFiles()).map(([date, files]) => (
+                                Object.entries(groupedChatFiles).map(([date, files]) => (
                                     <div key={date} className="mb-6">
                                         <h3 className="text-lg font-semibold text-white mb-3">{date}</h3>
                                         <div className="grid grid-cols-4 gap-3">
                                             {files.map(file => (
-                                                <div key={file.id} className="bg-gray-700 rounded-lg p-3">
-                                                    {file.type.startsWith('image/') ? (
+                                                <div key={file.id} className="bg-gray-700 rounded-lg p-3 relative">
+
+                                                    {/* 🚨 [수정] 파일 타입 검사 (목업 데이터 타입: image, video, pdf 등 사용) */}
+                                                    {file.type === 'image' ? ( // Image check
                                                         <div
                                                             onClick={() => setSelectedImage(file.url)}
                                                             className="cursor-pointer hover:opacity-80 transition-opacity"
                                                         >
                                                             <img
-                                                                src={file.url}
+                                                                src={file.url || "https://via.placeholder.com/150?text=Image"}
                                                                 alt={file.name}
                                                                 className="w-full h-32 object-cover rounded mb-2"
                                                             />
                                                             <div className="text-xs text-gray-300 truncate">{file.name}</div>
                                                         </div>
-                                                    ) : file.type.startsWith('video/') ? (
+                                                    ) : file.type === 'video' ? ( // Video check
                                                         <div>
                                                             <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
                                                                 <Video size={40} className="text-blue-400" />
@@ -935,12 +960,19 @@ export default function ChatRoom() {
                                                             <button
                                                                 onClick={() => handleFileDownload(file.id, file.url, file.name)}
                                                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 rounded transition-colors"
+                                                                disabled={downloadProgress[file.id] > 0}
                                                             >
-                                                                <Download size={12} className="inline mr-1" />
-                                                                다운로드
+                                                                {downloadProgress[file.id] ? (
+                                                                    downloadProgress[file.id] < 100 ? `${downloadProgress[file.id]}% 다운로드 중` : '완료'
+                                                                ) : (
+                                                                    <>
+                                                                        <Download size={12} className="inline mr-1" />
+                                                                        다운로드
+                                                                    </>
+                                                                )}
                                                             </button>
                                                         </div>
-                                                    ) : file.type === 'application/pdf' ? (
+                                                    ) : (file.type === 'pdf' || file.type === 'doc' || file.type === 'xlsx' || file.type === 'docx') ? ( // Document check
                                                         <div>
                                                             <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
                                                                 <FileText size={40} className="text-red-400" />
@@ -949,9 +981,16 @@ export default function ChatRoom() {
                                                             <button
                                                                 onClick={() => handleFileDownload(file.id, file.url, file.name)}
                                                                 className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 rounded transition-colors"
+                                                                disabled={downloadProgress[file.id] > 0}
                                                             >
-                                                                <Download size={12} className="inline mr-1" />
-                                                                다운로드
+                                                                {downloadProgress[file.id] ? (
+                                                                    downloadProgress[file.id] < 100 ? `${downloadProgress[file.id]}% 다운로드 중` : '완료'
+                                                                ) : (
+                                                                    <>
+                                                                        <Download size={12} className="inline mr-1" />
+                                                                        다운로드
+                                                                    </>
+                                                                )}
                                                             </button>
                                                         </div>
                                                     ) : null}
@@ -963,6 +1002,14 @@ export default function ChatRoom() {
                             )}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* 이미지 미리보기 모달 */}
+            {selectedImage && (
+                <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60]" onClick={() => setSelectedImage(null)}>
+                    <img src={selectedImage} alt="Preview" className="max-w-4/5 max-h-4/5 object-contain" onClick={e => e.stopPropagation()} />
+                    <button onClick={() => setSelectedImage(null)} className="absolute top-4 right-4 text-white hover:text-gray-300"><X size={32} /></button>
                 </div>
             )}
         </div>

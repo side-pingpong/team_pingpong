@@ -9,6 +9,7 @@ import Register from "./pages/auth/Register";
 import FindId from "./pages/auth/FindId";
 import FindPassword from "./pages/auth/FindPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import FileBox from "./pages/FileBox";
 
 export default function App() {
     return (
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/findId" element={<FindId/>}/>
             <Route path="/findPassword" element={<FindPassword/>}/>
             <Route path="/resetPassword" element={<ResetPassword/>}/>
+            <Route path="/fileBox" element={<FileBox/>}/>
         </Routes>
     );
 }

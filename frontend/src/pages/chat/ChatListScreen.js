@@ -5,7 +5,8 @@ import ContextMenu from "../../components/chat/ContextMenu";
 import ChatListItem from '../../components/chat/ChatListItem';
 import NewChatModal from '../../components/chat/NewChatModal';
 import Sidebar from "../../components/Sidebar";
-import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/ChatUtils";
+import { useNavigate } from 'react-router-dom';
+import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/chatUtils";
 
 const initialMockChats = [
     { id: 1, name: '팀 프로젝트 그룹', lastMessage: '회의 자료 공유했습니다.', lastTime: '2025-11-19T11:30:00Z', isTeam: true, isFavorite: true, unreadCount: 3, profileImage: '💼', isAlertOn: true },
@@ -21,6 +22,7 @@ export default function ChatListScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
     const [activeSidebar, setActiveSidebar] = useState('chat');
+    const navigate = useNavigate();
 
     // 우클릭 메뉴 상태
     const [contextMenu, setContextMenu] = useState({
@@ -40,6 +42,11 @@ export default function ChatListScreen() {
         { key: 'default', label: '기본방' },
         { key: 'team', label: '팀 채팅방' },
     ];
+
+    // [추가] 페이지 이동 핸들러
+    const handleNavigation = (path) => {
+        navigate(path);
+    };
 
     const handleAddChat = (newChatData) => {
         const newChat = {
@@ -190,8 +197,8 @@ export default function ChatListScreen() {
 
             {/* 1. 사이드바 */}
             <Sidebar
-                activeSidebar={activeSidebar}
-                setActiveSidebar={setActiveSidebar}
+               activePath={window.location.pathname} // 현재 경로를 Sidebar에 전달 (하이라이팅용)
+                onNavigate={handleNavigation} // 네비게이션 함수 전달
             />
 
             {/* 2. 메인 콘텐츠 (채팅 리스트) */}
