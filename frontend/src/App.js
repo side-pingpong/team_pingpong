@@ -1,5 +1,6 @@
 //App.js는 앱 안에서 페이지를 구성하고 라우팅을 결정하는 역할
 import React from 'react';
+import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import ChatRoom from './pages/chat/chatroom';
 import Home from './Home';
