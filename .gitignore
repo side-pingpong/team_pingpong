@@ -65,3 +65,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# =============================
+# 🔐 Secret Configuration
+# =============================
+**/application-secret.yml
+/backend/src/main/resources/spring-ai-study-e08977554fea.json
