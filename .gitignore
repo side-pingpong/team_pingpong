@@ -6,6 +6,7 @@
 /frontend/node_modules
 /frontend/.pnp
 /frontend/.pnp.js
+node_modules/
 
 # testing
 /frontend/coverage
@@ -65,7 +66,9 @@ out/
 
 ### VS Code ###
 .vscode/
-node_modules/
 
-backend/src/main/resources/application-secret.yml
-backend/src/main/resources/spring-ai-study-e08977554fea.json
+# =============================
+# 🔐 Secret Configuration
+# =============================
+**/application-secret.yml
+/backend/src/main/resources/spring-ai-study-e08977554fea.json
