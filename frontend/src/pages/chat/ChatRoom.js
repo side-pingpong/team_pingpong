@@ -1,5 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Check, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import FriendSelectionModal from "../../components/chat/FriendSelectionModal";
+import {handleChatRoomLeave, handleDeleteChatRoom} from "../../utils/chatUtils";
+import {isSameDay, formatDate} from "../../utils/timeUtils";
+import {uploadFileApi, fetchFilesApi} from "../../api/file";
+import {handleFileDownload as utilsHandleFileDownload, groupFilesByDate} from "../../utils/fileUtils";
+import { Search, ChevronUp, ChevronDown, Calendar, User, Menu, Send, MessageCircle, X, Settings, LogOut, Trash2, UserPlus, Edit, Paperclip, Download, FileText, Video, Folder, Image } from 'lucide-react'; // [수정] 사용하지 않는 아이콘 제거
 
 export default function ChatRoom() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -14,7 +19,6 @@ export default function ChatRoom() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
-    const [selectedFriends, setSelectedFriends] = useState([]);
     const [isEditingRoomName, setIsEditingRoomName] = useState(false);
     const [roomName, setRoomName] = useState('채팅방 프로필');
     const [roomThumbnail, setRoomThumbnail] = useState('💬');
@@ -22,37 +26,45 @@ export default function ChatRoom() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [downloadProgress, setDownloadProgress] = useState({}); // [수정] 사용하지 않지만, 파일 다운로드 로직에서 사용되므로 유지
-
+    // 추가 : 파일 관련
+    const [chatFiles, setChatFiles] = useState([]); // 현재 채팅방 파일 목록
+    const [downloadProgress, setDownloadProgress] = useState({}); // 다운로드 진행 상태 관리
+    const [uploadProgress, setUploadProgress] = useState(0); // 업로드 진행률 상태 (0:초기, 1~100: 진행 중)
     // 추가: 메시지 스크롤을 위한 Ref
     const messagesEndRef = useRef(null);
+
+    // 추가 : 현재 채팅방 정보
+    const currentChatData = {
+        id: 101,
+        name: '프로젝트 팀방',
+        // 실제로는 이 정보도 상위 컴포넌트(ChatListApp)로부터 props로 받아와야함
+    };
 
     // 현재 사용자
     const currentUser = {
         id: 'user1',
         name: '나',
-        avatar: '👤',
+        profileImage: '👤',
         isOwner: true // 방장 여부
     };
 
     // 채팅방 참여자
     const [participants, setParticipants] = useState([
-        { id: 'user2', name: '김철수', avatar: '🧑', isOwner: false },
-        { id: 'user3', name: '이영희', avatar: '👩', isOwner: false },
-        { id: 'user4', name: '박지성', avatar: '🧔', isOwner: false }
+        { id: 'user2', name: '김철수', profileImage: '🧑', isOwner: false },
+        { id: 'user3', name: '이영희', profileImage: '👩', isOwner: false },
+        { id: 'user4', name: '박지성', profileImage: '🧔', isOwner: false }
     ]);
 
     // 친구 목록 (가나다순 정렬)
     const [friendsList] = useState([
-        { id: 'friend1', name: '강민수', avatar: '🧑‍💼' },
-        { id: 'friend2', name: '권지은', avatar: '👩‍💼' },
-        { id: 'friend3', name: '김영수', avatar: '🧑‍🎓' },
-        { id: 'friend4', name: '박서현', avatar: '👩‍🎨' },
-        { id: 'friend5', name: '송민호', avatar: '🧑‍🔬' },
-        { id: 'friend6', name: '이수진', avatar: '👩‍⚕️' },
-        { id: 'friend7', name: '정대현', avatar: '🧑‍🍳' },
-        { id: 'friend8', name: '최유리', avatar: '👩‍🏫' }
+        { id: 'friend1', name: '강민수', profileImage: '🧑‍💼' },
+        { id: 'friend2', name: '권지은', profileImage: '👩‍💼' },
+        { id: 'friend3', name: '김영수', profileImage: '🧑‍🎓' },
+        { id: 'friend4', name: '박서현', profileImage: '👩‍🎨' },
+        { id: 'friend5', name: '송민호', profileImage: '🧑‍🔬' },
+        { id: 'friend6', name: '이수진', profileImage: '👩‍⚕️' },
+        { id: 'friend7', name: '정대현', profileImage: '🧑‍🍳' },
+        { id: 'friend8', name: '최유리', profileImage: '👩‍🏫' }
     ].filter(friend => !participants.find(p => p.id === friend.id)));
 
     // 메시지 데이터
@@ -61,7 +73,7 @@ export default function ChatRoom() {
             id: 1,
             userId: 'user2',
             userName: '김철수',
-            avatar: '🧑',
+            profileImage: '🧑',
             content: '사진찍 메시지 잘 호비시, 댓글 달기 아이로 등.',
             timestamp: new Date('2025-11-04T10:30:00'),
             replies: [],
@@ -72,7 +84,7 @@ export default function ChatRoom() {
             id: 2,
             userId: 'user1',
             userName: '나',
-            avatar: '👤',
+            profileImage: '👤',
             content: '네, 알겠습니다!',
             timestamp: new Date('2025-11-04T10:32:00'),
             replies: [],
@@ -83,7 +95,7 @@ export default function ChatRoom() {
             id: 3,
             userId: 'user3',
             userName: '이영희',
-            avatar: '👩',
+            profileImage: '👩',
             content: '회의는 몇 시에 시작하나요?',
             timestamp: new Date('2025-11-05T09:15:00'),
             replies: [],
@@ -91,23 +103,6 @@ export default function ChatRoom() {
             files: []
         }
     ]);
-
-    // 날짜 포맷팅 함수
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        const dayOfWeek = days[date.getDay()];
-        return `${year}년 ${month}월 ${day}일 ${dayOfWeek}`;
-    };
-
-    // 날짜가 같은지 체크
-    const isSameDay = (date1, date2) => {
-        return date1.getFullYear() === date2.getFullYear() &&
-            date1.getMonth() === date2.getMonth() &&
-            date1.getDate() === date2.getDate();
-    };
 
     // 메시지 필터링
     const filteredMessages = messages.filter(msg => {
@@ -137,7 +132,7 @@ export default function ChatRoom() {
             id: messages.length + 1,
             userId: currentUser.id,
             userName: currentUser.name,
-            avatar: currentUser.avatar,
+            profileImage: currentUser.profileImage,
             content: messageInput,
             timestamp: new Date(),
             replies: [],
@@ -167,7 +162,7 @@ export default function ChatRoom() {
             id: messages.length + 1,
             userId: currentUser.id,
             userName: currentUser.name,
-            avatar: currentUser.avatar,
+            profileImage: currentUser.profileImage,
             content: messageInput,
             timestamp: new Date(),
             replies: [],
@@ -200,53 +195,87 @@ export default function ChatRoom() {
         }
     };
 
-    // 파일 업로드 핸들러 (더미 구현)
-    const handleFileUpload = (event) => {
-        const files = Array.from(event.target.files);
-        if (files.length > 0) {
-            setUploadedFiles(files);
-            setUploadProgress(1); // 업로드 시작
-            // 실제 업로드 로직 (API 호출 등)
+    // ----------------------------------------------------
+    // [수정] 파일 다운로드 Wrapper (상태 관리 로직은 여기에 남음)
+    const handleFileDownload = useCallback((fileId, url, fileName) => {
+        setDownloadProgress(prev => ({ ...prev, [fileId]: 1 })); // 다운로드 시작
+
+        // 순수 유틸리티 함수 호출
+        utilsHandleFileDownload(url, fileName);
+
+        // 다운로드 완료 목업 로직 (실제는 API 응답 헤더나 웹소켓으로 처리)
+        setTimeout(() => {
+            setDownloadProgress(prev => ({ ...prev, [fileId]: 100 }));
+            // 완료 후 0.5초 뒤 상태 제거
             setTimeout(() => {
-                setUploadProgress(100);
-                setUploadProgress(0);
-            }, 1500);
+                setDownloadProgress(prev => {
+                    const newState = { ...prev };
+                    delete newState[fileId];
+                    return newState;
+                });
+            }, 500);
+        }, 1500);
+    }, []);
+
+
+    // [수정] 파일 목록 가져오기 로직 (API 호출 및 가공)
+    const loadFiles = useCallback(async () => {
+        try {
+            //  API 호출
+            const files = await fetchFilesApi(currentChatData.id);
+            setChatFiles(files);
+        } catch (error) {
+            alert('파일 목록을 불러오는 데 실패했습니다.');
+            console.error(error);
+        }
+    }, [currentChatData.id]); // currentChatData.id가 변경될 때마다 호출
+
+    useEffect(() => {
+        loadFiles();
+    }, [loadFiles]);
+
+
+    // [수정] 파일 업로드 로직 (API 호출)
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('chatId', currentChatData.id.toString());
+
+        let interval;
+        try {
+            // 업로드 시작 상태 (진행률 상태 표시 시작)
+            setUploadProgress(1);
+
+            // 진행률 시뮬레이션 시작 (실제는 API의 onProgress 이벤트로 대체)
+            interval = setInterval(() => {
+                setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
+            }, 300);
+
+            // API 호출
+            const newFileInfo = await uploadFileApi(formData);
+
+            // API 완료 후 처리
+            clearInterval(interval);
+            setUploadProgress(100); // 100% 완료 표시
+
+            // 업로드 성공 후 파일 목록에 추가
+            setChatFiles(prev => [...prev, newFileInfo]);
+            // alert(`${file.name} 파일 업로드 완료!`);
+            // 메시지 전송 로직도 여기에 추가될 수 있음
+
+        } catch (error) {
+            alert('파일 업로드 중 오류가 발생했습니다.');
+            console.error(error);
+        } finally {
+            setTimeout(() => setUploadProgress(0), 500);
         }
     };
 
-    // 파일 다운로드 핸들러 (더미 구현)
-    const handleFileDownload = (fileId, url, fileName) => {
-        setDownloadProgress(prev => ({ ...prev, [fileId]: 1 }));
-        // 실제 다운로드 로직
-        setTimeout(() => {
-            setDownloadProgress(prev => ({ ...prev, [fileId]: 100 }));
-            setDownloadProgress(prev => {
-                const newState = { ...prev };
-                delete newState[fileId];
-                return newState;
-            });
-        }, 1000);
-    };
-
-    // 모든 파일 가져오기 (더미 구현)
-    const getAllFiles = () => {
-        // 메시지에서 파일 정보를 추출하여 날짜별로 그룹화하는 로직
-        const allFiles = messages.flatMap(msg =>
-            msg.files.map(file => ({
-                ...file,
-                timestamp: msg.timestamp,
-                dateKey: formatDate(msg.timestamp)
-            }))
-        );
-
-        return allFiles.reduce((acc, file) => {
-            if (!acc[file.dateKey]) {
-                acc[file.dateKey] = [];
-            }
-            acc[file.dateKey].push(file);
-            return acc;
-        }, {});
-    };
+    //  [수정] 날짜별 그룹화 로직 (유틸리티 함수 사용)
+    const groupedChatFiles = groupFilesByDate(chatFiles, formatDate);
 
     // ----------------------------------------------------------------
     // [추가] 스크롤 자동 이동
@@ -257,55 +286,48 @@ export default function ChatRoom() {
         }
     }, [messages]);
 
-
-    // 친구 선택 토글
-    const toggleFriendSelection = (friendId) => {
-        setSelectedFriends(prev =>
-            prev.includes(friendId)
-                ? prev.filter(id => id !== friendId)
-                : [...prev, friendId]
-        );
-    };
-
     // 친구 초대
-    const handleInviteFriends = () => {
+    const handleInviteFriends = (selectedFriendIds) => {
+        // 변경: selectedFriends 상태 대신 인수로 받은 selectedFriendIds를 사용
         const newParticipants = friendsList
-            .filter(friend => selectedFriends.includes(friend.id))
+            .filter(friend => selectedFriendIds.includes(friend.id))
             .map(friend => ({ ...friend, isOwner: false }));
 
         setParticipants([...participants, ...newParticipants]);
-        setSelectedFriends([]);
         setIsInviteModalOpen(false);
         alert(`${newParticipants.length}명의 친구를 초대했습니다.`);
     };
 
     // 채팅방 나가기
     const handleLeaveChatRoom = () => {
-        if (currentUser.isOwner) {
-            // 방장이 나가는 경우
-            const sortedParticipants = [...participants].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-            if (sortedParticipants.length > 0) {
-                alert(`${sortedParticipants[0].name}님이 새로운 방장이 되었습니다.`);
-            }
-        }
-        // [수정] confirm 대신 window.confirm 사용
-        if (window.confirm('채팅방을 나가시겠습니까?')) {
-            alert('채팅방에서 나갔습니다.');
-            // 실제로는 페이지 이동 처리
-        }
+        const chatName = roomName; // 채팅방 이름상태
+        const isOwner = currentUser.isOwner;
+
+        handleChatRoomLeave({
+            chatName: chatName,
+            isOwner: isOwner,
+            participants: participants,
+            leaveCallback: () => {
+                // 실제 페이지 이동 로직: window.location.href = '/chatlist';
+            },
+            currentUser: currentUser,
+        });
     };
 
     // 채팅방 삭제 (방장만)
-    const handleDeleteChatRoom = () => {
-        if (!currentUser.isOwner) {
-            alert('방장만 채팅방을 삭제할 수 있습니다.');
-            return;
-        }
-        // [수정] confirm 대신 window.confirm 사용
-        if (window.confirm('채팅방을 삭제하시겠습니까? 모든 대화 내용이 사라집니다.')) {
-            alert('채팅방이 삭제되었습니다.');
-            // 실제로는 API 호출 및 페이지 이동
-        }
+    const handleDelete = () => {
+        handleDeleteChatRoom({
+            // 유틸리티 함수가 요구하는 형식에 맞게 데이터를 전달합니다.
+            chatData: {
+                id: currentChatData.id,
+                name: currentChatData.name
+            },
+            currentUser: currentUser,
+            deleteCallback: () => {
+                console.log('채팅방 목록 페이지로 이동해야 함');
+                // navigate('/chatlist'); 실행
+            }
+        });
     };
 
     // 채팅방 이미지 업로드
@@ -510,7 +532,7 @@ export default function ChatRoom() {
                         </button>
                         {currentUser.isOwner && (
                             <button
-                                onClick={handleDeleteChatRoom}
+                                onClick={handleDelete}
                                 className="w-full text-left px-4 py-3 hover:bg-red-700 rounded-b-lg transition-colors flex items-center gap-3 text-red-400"
                             >
                                 <Trash2 size={20} />
@@ -552,7 +574,7 @@ export default function ChatRoom() {
                                         {/* 아바타 (연속 메시지가 아닐 때만 표시) */}
                                         {!isCurrentUser && isNewUserMessage && (
                                             <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xl mt-1">
-                                                {message.avatar}
+                                                {message.profileImage}
                                             </div>
                                         )}
                                         {!isCurrentUser && !isNewUserMessage && (
@@ -687,13 +709,15 @@ export default function ChatRoom() {
                     </div>
                 )}
 
-                {/* 업로드 진행률 */}
-                {uploadProgress > 0 && uploadProgress < 100 && (
-                    <div className="mb-3 bg-gray-700 rounded-lg p-3">
-                        <div className="text-xs text-blue-400 mb-2">파일 업로드 중...</div>
+                {/* 🚨 업로드 진행률 표시 영역 */}
+                {uploadProgress > 0 && uploadProgress <= 100 && (
+                    <div className="p-3">
+                        <div className="text-xs text-blue-400 mb-2">
+                            {uploadProgress < 100 ? '파일 업로드 중...' : '파일 업로드 완료!'}
+                        </div>
                         <div className="w-full bg-gray-600 rounded-full h-2">
                             <div
-                                className="bg-blue-500 h-2 rounded-full transition-all"
+                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                                 style={{ width: `${uploadProgress}%` }}
                             />
                         </div>
@@ -701,21 +725,22 @@ export default function ChatRoom() {
                     </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                    <input
-                        type="file"
-                        id="fileUpload"
-                        multiple
-                        accept="image/*,video/*,.pdf"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                    />
-                    <label
-                        htmlFor="fileUpload"
-                        className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-colors cursor-pointer"
-                    >
+                {/* 🚨 [수정] 파일 업로드 버튼과 메시지 입력 필드를 하나의 Flex 컨테이너로 통합 */}
+                <div className="flex items-center gap-2 p-1"> {/* p-1은 파일 진행률과의 간격 조정 */}
+                    {/* 파일 업로드 버튼 */}
+                    <label htmlFor="file-upload" className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-colors cursor-pointer">
                         <Paperclip size={20} />
+                        <input
+                            id="file-upload"
+                            type="file"
+                            multiple
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            disabled={uploadProgress > 0}
+                        />
                     </label>
+
+                    {/* 메시지 입력 필드 */}
                     <input
                         type="text"
                         placeholder={replyingToMessage ? "답장 입력" : "메시지 입력"}
@@ -723,10 +748,14 @@ export default function ChatRoom() {
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                         className="flex-1 bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={uploadProgress > 0} // 파일 업로드 중 입력 방지
                     />
+
+                    {/* 전송 버튼 */}
                     <button
                         onClick={handleSendMessage}
                         className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors"
+                        disabled={uploadProgress > 0} // 파일 업로드 중 전송 방지
                     >
                         <Send size={20} />
                     </button>
@@ -735,43 +764,14 @@ export default function ChatRoom() {
 
             {/* 멤버 초대 모달 */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-lg p-6 w-96 max-h-[600px] flex flex-col">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-white">멤버 초대하기</h2>
-                            <button onClick={() => setIsInviteModalOpen(false)} className="text-gray-400 hover:text-white">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto mb-4">
-                            <div className="text-sm text-gray-400 mb-2">친구 목록 ({friendsList.length}명)</div>
-                            {friendsList.map(friend => (
-                                <div
-                                    key={friend.id}
-                                    onClick={() => toggleFriendSelection(friend.id)}
-                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer mb-2 transition-colors ${
-                                        selectedFriends.includes(friend.id)
-                                            ? 'bg-blue-600 hover:bg-blue-700'
-                                            : 'bg-gray-700 hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <span className="text-2xl">{friend.avatar}</span>
-                                    <span className="text-white flex-1">{friend.name}</span>
-                                    {selectedFriends.includes(friend.id) && <Check size={20} className="text-white" />}
-                                </div>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={handleInviteFriends}
-                            disabled={selectedFriends.length === 0}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors"
-                        >
-                            {selectedFriends.length}명 초대하기
-                        </button>
-                    </div>
-                </div>
+                <FriendSelectionModal
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    friendsList={friendsList} // 초대 가능한 친구 목록 전달
+                    onConfirm={handleInviteFriends} // 선택된 ID를 처리하는 함수 전달
+                    title="멤버 초대하기"
+                    confirmLabel="초대하기"
+                />
             )}
 
             {/* 채팅방 설정 모달 */}
@@ -856,13 +856,13 @@ export default function ChatRoom() {
                             <h3 className="text-lg font-semibold text-white mb-3">참여자 목록</h3>
                             <div className="space-y-2 max-h-48 overflow-y-auto">
                                 <div className="flex items-center gap-3 p-2 bg-gray-700 rounded-lg">
-                                    <span className="text-2xl">{currentUser.avatar}</span>
+                                    <span className="text-2xl">{currentUser.profileImage}</span>
                                     <span className="text-white flex-1">{currentUser.name}</span>
                                     {currentUser.isOwner && <span className="text-xs bg-yellow-600 px-2 py-1 rounded">방장</span>}
                                 </div>
                                 {participants.map(participant => (
                                     <div key={participant.id} className="flex items-center gap-3 p-2 bg-gray-700 rounded-lg">
-                                        <span className="text-2xl">{participant.avatar}</span>
+                                        <span className="text-2xl">{participant.profileImage}</span>
                                         <span className="text-white flex-1">{participant.name}</span>
                                     </div>
                                 ))}
@@ -886,13 +886,13 @@ export default function ChatRoom() {
                         <div className="flex-1 overflow-y-auto mb-4">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
-                                    <span className="text-2xl">{currentUser.avatar}</span>
+                                    <span className="text-2xl">{currentUser.profileImage}</span>
                                     <span className="text-white flex-1">{currentUser.name}</span>
                                     {currentUser.isOwner && <span className="text-xs bg-yellow-600 px-2 py-1 rounded">방장</span>}
                                 </div>
                                 {participants.map(participant => (
                                     <div key={participant.id} className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
-                                        <span className="text-2xl">{participant.avatar}</span>
+                                        <span className="text-2xl">{participant.profileImage}</span>
                                         <span className="text-white flex-1">{participant.name}</span>
                                     </div>
                                 ))}
@@ -946,31 +946,34 @@ export default function ChatRoom() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
-                            {Object.keys(getAllFiles()).length === 0 ? (
+                            {/* 🚨 [수정] groupedChatFiles 데이터 사용 */}
+                            {Object.keys(groupedChatFiles).length === 0 ? (
                                 <div className="text-center text-gray-400 py-10">
                                     <Folder size={48} className="mx-auto mb-3 opacity-50" />
                                     <p>공유된 파일이 없습니다</p>
                                 </div>
                             ) : (
-                                Object.entries(getAllFiles()).map(([date, files]) => (
+                                Object.entries(groupedChatFiles).map(([date, files]) => (
                                     <div key={date} className="mb-6">
                                         <h3 className="text-lg font-semibold text-white mb-3">{date}</h3>
                                         <div className="grid grid-cols-4 gap-3">
                                             {files.map(file => (
-                                                <div key={file.id} className="bg-gray-700 rounded-lg p-3">
-                                                    {file.type.startsWith('image/') ? (
+                                                <div key={file.id} className="bg-gray-700 rounded-lg p-3 relative">
+
+                                                    {/* 🚨 [수정] 파일 타입 검사 (목업 데이터 타입: image, video, pdf 등 사용) */}
+                                                    {file.type === 'image' ? ( // Image check
                                                         <div
                                                             onClick={() => setSelectedImage(file.url)}
                                                             className="cursor-pointer hover:opacity-80 transition-opacity"
                                                         >
                                                             <img
-                                                                src={file.url}
+                                                                src={file.url || "https://via.placeholder.com/150?text=Image"}
                                                                 alt={file.name}
                                                                 className="w-full h-32 object-cover rounded mb-2"
                                                             />
                                                             <div className="text-xs text-gray-300 truncate">{file.name}</div>
                                                         </div>
-                                                    ) : file.type.startsWith('video/') ? (
+                                                    ) : file.type === 'video' ? ( // Video check
                                                         <div>
                                                             <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
                                                                 <Video size={40} className="text-blue-400" />
@@ -979,12 +982,19 @@ export default function ChatRoom() {
                                                             <button
                                                                 onClick={() => handleFileDownload(file.id, file.url, file.name)}
                                                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 rounded transition-colors"
+                                                                disabled={downloadProgress[file.id] > 0}
                                                             >
-                                                                <Download size={12} className="inline mr-1" />
-                                                                다운로드
+                                                                {downloadProgress[file.id] ? (
+                                                                    downloadProgress[file.id] < 100 ? `${downloadProgress[file.id]}% 다운로드 중` : '완료'
+                                                                ) : (
+                                                                    <>
+                                                                        <Download size={12} className="inline mr-1" />
+                                                                        다운로드
+                                                                    </>
+                                                                )}
                                                             </button>
                                                         </div>
-                                                    ) : file.type === 'application/pdf' ? (
+                                                    ) : (file.type === 'pdf' || file.type === 'doc' || file.type === 'xlsx' || file.type === 'docx') ? ( // Document check
                                                         <div>
                                                             <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
                                                                 <FileText size={40} className="text-red-400" />
@@ -993,9 +1003,16 @@ export default function ChatRoom() {
                                                             <button
                                                                 onClick={() => handleFileDownload(file.id, file.url, file.name)}
                                                                 className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 rounded transition-colors"
+                                                                disabled={downloadProgress[file.id] > 0}
                                                             >
-                                                                <Download size={12} className="inline mr-1" />
-                                                                다운로드
+                                                                {downloadProgress[file.id] ? (
+                                                                    downloadProgress[file.id] < 100 ? `${downloadProgress[file.id]}% 다운로드 중` : '완료'
+                                                                ) : (
+                                                                    <>
+                                                                        <Download size={12} className="inline mr-1" />
+                                                                        다운로드
+                                                                    </>
+                                                                )}
                                                             </button>
                                                         </div>
                                                     ) : null}
@@ -1007,6 +1024,14 @@ export default function ChatRoom() {
                             )}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* 이미지 미리보기 모달 */}
+            {selectedImage && (
+                <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60]" onClick={() => setSelectedImage(null)}>
+                    <img src={selectedImage} alt="Preview" className="max-w-4/5 max-h-4/5 object-contain" onClick={e => e.stopPropagation()} />
+                    <button onClick={() => setSelectedImage(null)} className="absolute top-4 right-4 text-white hover:text-gray-300"><X size={32} /></button>
                 </div>
             )}
         </div>
