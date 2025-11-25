@@ -29,6 +29,7 @@ export default function ChatRoom() {
     // 추가 : 파일 관련
     const [chatFiles, setChatFiles] = useState([]); // 현재 채팅방 파일 목록
     const [downloadProgress, setDownloadProgress] = useState({}); // 다운로드 진행 상태 관리
+    const [uploadProgress, setUploadProgress] = useState(0); // 업로드 진행률 상태 (0:초기, 1~100: 진행 중)
     // 추가: 메시지 스크롤을 위한 Ref
     const messagesEndRef = useRef(null);
 
@@ -243,18 +244,33 @@ export default function ChatRoom() {
         formData.append('file', file);
         formData.append('chatId', currentChatData.id.toString());
 
+        let interval;
         try {
+            // 업로드 시작 상태 (진행률 상태 표시 시작)
+            setUploadProgress(1);
+
+            // 진행률 시뮬레이션 시작 (실제는 API의 onProgress 이벤트로 대체)
+            interval = setInterval(() => {
+                setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
+            }, 300);
+
             // API 호출
             const newFileInfo = await uploadFileApi(formData);
 
+            // API 완료 후 처리
+            clearInterval(interval);
+            setUploadProgress(100); // 100% 완료 표시
+
             // 업로드 성공 후 파일 목록에 추가
             setChatFiles(prev => [...prev, newFileInfo]);
-            alert(`${file.name} 파일 업로드 완료!`);
+            // alert(`${file.name} 파일 업로드 완료!`);
             // 메시지 전송 로직도 여기에 추가될 수 있음
 
         } catch (error) {
             alert('파일 업로드 중 오류가 발생했습니다.');
             console.error(error);
+        } finally {
+            setTimeout(() => setUploadProgress(0), 500);
         }
     };
 
@@ -693,35 +709,38 @@ export default function ChatRoom() {
                     </div>
                 )}
 
-                {/*/!* 업로드 진행률 *!/*/}
-                {/*{uploadProgress > 0 && uploadProgress < 100 && (*/}
-                {/*    <div className="mb-3 bg-gray-700 rounded-lg p-3">*/}
-                {/*        <div className="text-xs text-blue-400 mb-2">파일 업로드 중...</div>*/}
-                {/*        <div className="w-full bg-gray-600 rounded-full h-2">*/}
-                {/*            <div*/}
-                {/*                className="bg-blue-500 h-2 rounded-full transition-all"*/}
-                {/*                style={{ width: `${uploadProgress}%` }}*/}
-                {/*            />*/}
-                {/*        </div>*/}
-                {/*        <div className="text-xs text-gray-400 mt-1 text-right">{uploadProgress}%</div>*/}
-                {/*    </div>*/}
-                {/*)}*/}
+                {/* 🚨 업로드 진행률 표시 영역 */}
+                {uploadProgress > 0 && uploadProgress <= 100 && (
+                    <div className="p-3">
+                        <div className="text-xs text-blue-400 mb-2">
+                            {uploadProgress < 100 ? '파일 업로드 중...' : '파일 업로드 완료!'}
+                        </div>
+                        <div className="w-full bg-gray-600 rounded-full h-2">
+                            <div
+                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${uploadProgress}%` }}
+                            />
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1 text-right">{uploadProgress}%</div>
+                    </div>
+                )}
 
-                <div className="flex items-center gap-2">
-                    <input
-                        type="file"
-                        id="fileUpload"
-                        multiple
-                        accept="image/*,video/*,.pdf"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                    />
-                    <label
-                        htmlFor="fileUpload"
-                        className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-colors cursor-pointer"
-                    >
+                {/* 🚨 [수정] 파일 업로드 버튼과 메시지 입력 필드를 하나의 Flex 컨테이너로 통합 */}
+                <div className="flex items-center gap-2 p-1"> {/* p-1은 파일 진행률과의 간격 조정 */}
+                    {/* 파일 업로드 버튼 */}
+                    <label htmlFor="file-upload" className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-colors cursor-pointer">
                         <Paperclip size={20} />
+                        <input
+                            id="file-upload"
+                            type="file"
+                            multiple
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            disabled={uploadProgress > 0}
+                        />
                     </label>
+
+                    {/* 메시지 입력 필드 */}
                     <input
                         type="text"
                         placeholder={replyingToMessage ? "답장 입력" : "메시지 입력"}
@@ -729,10 +748,14 @@ export default function ChatRoom() {
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                         className="flex-1 bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={uploadProgress > 0} // 파일 업로드 중 입력 방지
                     />
+
+                    {/* 전송 버튼 */}
                     <button
                         onClick={handleSendMessage}
                         className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors"
+                        disabled={uploadProgress > 0} // 파일 업로드 중 전송 방지
                     >
                         <Send size={20} />
                     </button>
