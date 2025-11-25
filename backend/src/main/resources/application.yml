@@ -1,3 +1,5 @@
 spring:
   application:
     name: team_pingpong
+  config:
+    import: optional:classpath:application-secret.yml
