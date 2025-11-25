@@ -1,7 +1,7 @@
 //App.js는 앱 안에서 페이지를 구성하고 라우팅을 결정하는 역할
 import React from 'react';
 import {Route, Routes} from 'react-router-dom';
-import ChatRoom from './pages/chat/Chatroom';
+import ChatRoom from './pages/chat/ChatRoom';
 import Home from './Home';
 import ChatListScreen from "./pages/chat/ChatListScreen";
 import Login from './pages/auth/Login';
@@ -9,6 +9,7 @@ import Register from "./pages/auth/Register";
 import FindId from "./pages/auth/FindId";
 import FindPassword from "./pages/auth/FindPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import FileBox from "./pages/FileBox";
 
 export default function App() {
     return (
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/findId" element={<FindId/>}/>
             <Route path="/findPassword" element={<FindPassword/>}/>
             <Route path="/resetPassword" element={<ResetPassword/>}/>
+            <Route path="/fileBox" element={<FileBox/>}/>
         </Routes>
     );
 }
