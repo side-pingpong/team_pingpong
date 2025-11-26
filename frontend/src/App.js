@@ -9,6 +9,7 @@ import Register from "./pages/auth/Register";
 import FindId from "./pages/auth/FindId";
 import FindPassword from "./pages/auth/FindPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import AiChat from "./components/ai_chat/AiChat";
 import FileBox from "./pages/FileBox";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/findId" element={<FindId/>}/>
             <Route path="/findPassword" element={<FindPassword/>}/>
             <Route path="/resetPassword" element={<ResetPassword/>}/>
+            <Route path="/ai-chat" element={<AiChat/>} />
             <Route path="/fileBox" element={<FileBox/>}/>
         </Routes>
     );
